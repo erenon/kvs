@@ -1,6 +1,7 @@
 # ignore Eclipse CDT resources
 .project
 .cproject
+.settings/
 
 # ignore SCons resuorces
 .sconsign.dblite

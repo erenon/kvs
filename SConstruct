@@ -28,11 +28,11 @@ build_dir = 'build/' + env['CXX'] + '/'
 if GetOption('debug_build'):
   variant_dir = build_dir + 'debug'
   env['CXXFLAGS'] += ['-Og']
-  env['CCFLAGS']  += ['-g']
 else:
   variant_dir = build_dir + 'release'
   env['CXXFLAGS'] += ['-O2']
 
+env['CCFLAGS'] += ['-g']
 env['LIBPATH'] = os.path.join(variant_dir, 'lib')
 
 SConscript(
