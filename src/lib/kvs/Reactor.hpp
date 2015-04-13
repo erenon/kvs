@@ -19,24 +19,28 @@ public:
   Reactor();
 
   template <typename Handler, typename... HandlerArgs>
-  bool addHandler(int fd, int events, HandlerArgs... handlerArgs);
+  bool addHandler(int fd, int events, HandlerArgs&&... handlerArgs);
 
   bool addHandler(IOHandler* pHandler, int fd, int events);
 
   bool dispatch();
+
+  bool isStopped() const { return _stopped; }
+  void stop() { _stopped = true; }
 
 private:
   void addHandler(IOHandler* pHandler);
   bool addToEpoll(IOHandler* pHandler, int fd, int events);
   void removeHandler(IOHandler* toDelete);
 
+  bool _stopped = false;
   Fd _epollfd;
   std::mutex _handlersMutex;
   std::vector<std::unique_ptr<IOHandler>> _handlers;
 };
 
 template <typename Handler, typename... HandlerArgs>
-bool Reactor::addHandler(int fd, int events, HandlerArgs... handlerArgs)
+bool Reactor::addHandler(int fd, int events, HandlerArgs&&... handlerArgs)
 {
   IOHandler* pHandler = new Handler(std::forward<HandlerArgs>(handlerArgs)...);
   addHandler(pHandler);

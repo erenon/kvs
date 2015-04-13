@@ -14,20 +14,36 @@ enum class CommandType : uint16_t
 class Command
 {
 public:
-  typedef uint16_t Size;
+  typedef std::size_t Size;
 
-  constexpr Command() = default;
+  Command(const char* header);
+  Command(const char* header, const char* body);
 
-  constexpr Size size() const { return _size; }
-  constexpr CommandType type() const { return _command; }
+  Size size() const
+  {
+    return _pHeader->size;
+  }
 
-  // ... payload() const { ... }
+  CommandType type() const
+  {
+    return _pHeader->type;
+  }
+
+  const char* payload() const
+  {
+    return _pBody;
+  }
 
 private:
-  Size _size;
-  CommandType _command;
-  // payload follows
-} __attribute__((packed));
+  struct Header
+  {
+    const Size size;
+    const CommandType type;
+  } __attribute__((packed));
+
+  const Header* _pHeader;
+  const char* _pBody;
+};
 
 } // namespace kvs
 

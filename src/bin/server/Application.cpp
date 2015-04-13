@@ -7,8 +7,6 @@
 
 using namespace kvs;
 
-static bool g_runMainLoop = true;
-
 int main(int argc, const char* argv[])
 {
   (void)argc;
@@ -17,12 +15,14 @@ int main(int argc, const char* argv[])
   Reactor reactor;
 
   // Add console
-  reactor.addHandler<TextCommandHandler>(STDIN_FILENO, EPOLLIN, STDIN_FILENO);
+  reactor.addHandler<TextCommandHandler>(
+    STDIN_FILENO, EPOLLIN, STDIN_FILENO, reactor
+  );
 
   // Add server
   ListenHandler server(reactor, 1337);
 
-  while (g_runMainLoop)
+  while (! reactor.isStopped())
   {
     reactor.dispatch();
   }
