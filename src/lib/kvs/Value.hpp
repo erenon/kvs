@@ -6,68 +6,8 @@
 #include <vector>
 
 #include <boost/variant/variant.hpp>
-// #include <boost/utility/string_ref.hpp>
 
 namespace kvs {
-
-enum ValueType : uint16_t
-{
-  scalar = 0,
-  list   = 1,
-
-  int8_v,
-  int16_v,
-  int32_v,
-  int64_v,
-
-  uint8_v,
-  uint16_v,
-  uint32_v,
-  uint64_v,
-
-  float_v,
-  double_v,
-};
-
-template <typename T>
-struct ValueTypeOf
-{
-  static const ValueType value =
-    (std::is_signed<T>::value)
-  ? (sizeof(T) == 1)
-  ? int8_v
-  : (sizeof(T) == 2)
-  ? int16_v
-  : (sizeof(T) == 4)
-  ? int32_v
-  : int64_v
-  : (sizeof(T) == 1)
-  ? uint8_v
-  : (sizeof(T) == 2)
-  ? uint16_v
-  : (sizeof(T) == 4)
-  ? uint32_v
-  : uint64_v;
-};
-
-template <>
-struct ValueTypeOf<float>
-{
-  static const ValueType value = float_v;
-};
-
-template <>
-struct ValueTypeOf<double>
-{
-  static const ValueType value = double_v;
-};
-
-template <typename T>
-struct ValueTypeOf<std::vector<T>>
-{
-  static const ValueType value =
-    ValueTypeOf<T>::value & ValueType::list;
-};
 
 typedef boost::variant<
   char,
@@ -99,102 +39,96 @@ typedef boost::variant<
 
 bool readValue(const char*& begin, const char* end, TypedValue& result);
 
-//inline bool readValue(boost::string_ref& input, TypedValue& result)
-//{
-//  return readValue(&input.front(), &input.back() + 1, result);
-//}
+enum ValueTag : uint16_t
+{
+  scalar = 0,
+  list   = 1,
 
-//class Value
-//{
-//public:
-//  constexpr Value() = default;
-//
-//  template <typename T>
-//  Value(const T& t)
-//    :_type(ValueTypeOf<T>::value)
-//  {
-//    std::memcpy(
-//      reinterpret_cast<void*>(this + 1),
-//      reinterpret_cast<const void*>(&T),
-//      sizeof(T)
-//    );
-//  }
-//
-//  template <typename T>
-//  Value(const std::vector<T>& vect)
-//    :_type(ValueTypeOf<std::vector<T>>::value)
-//  {
-//    // TODO Value vector constructor
-//    static_assert(sizeof(T) == 0, "Not implemented");
-//  }
-//
-//  constexpr ValueType type() const { return _type; }
-//
-//  template <typename T>
-//  T& get()
-//  {
-//    return *reinterpret_cast<T*>(this + 1);
-//  }
-//
-//  template <typename T>
-//  const T& get() const
-//  {
-//    return *reinterpret_cast<const T*>(this + 1);
-//  }
-//
-//  // TODO getVariant()
-//  // TODO getOptional()
-//  // TODO get vector specializations
-//
-//  uint16_t size() const
-//  {
-//    ValueType scalarType = _type & ValueType::scalar;
-//    uint16_t scalarSize;
-//
-//    switch (scalarType)
-//    {
-//    case int8_v:
-//    case uint8_v:
-//      scalarSize = 1;
-//      break;
-//    case int16_v:
-//    case uint16_v:
-//      scalarSize = 2;
-//      break;
-//    case int32_v:
-//    case uint32_v:
-//      scalarSize = 4;
-//      break;
-//    case int64_v:
-//    case uint64_v:
-//      scalarSize = 8;
-//      break;
-//    case float_v:
-//      scalarSize = sizeof(float);
-//      break;
-//    case double_v:
-//      scalarSize = sizeof(double);
-//      break;
-//    default:
-//      std::terminate();
-//      break;
-//    }
-//
-//    if (_type & ValueType::list)
-//    {
-//      uint16_t* pListSize = reinterpret_cast<const uint16_t*>(this + 1);
-//      return sizeof(_type) + *pListSize * scalarSize;
-//    }
-//    else
-//    {
-//      return sizeof(_type) + scalarSize;
-//    }
-//  }
-//
-//private:
-//  ValueType _type;
-//  // payload follows
-//} __attribute__((packed));
+  tag_int8  = 2,
+  tag_int16 = 4,
+  tag_int32 = 6,
+  tag_int64 = 8,
+
+  tag_uint8  = 10,
+  tag_uint16 = 12,
+  tag_uint32 = 14,
+  tag_uint64 = 16,
+
+  tag_float  = 18,
+  tag_double = 20,
+};
+
+typedef std::size_t ListSize;
+
+template <typename>
+struct ValueDescriptor;
+
+template <typename T>
+struct ValueDescriptor<std::vector<T>>
+{
+  static_assert(std::is_arithmetic<T>::value, "Unsupported list type");
+
+  static const ValueTag tag = ValueDescriptor<T>::tag & ValueTag::list;
+
+  static std::size_t size(const std::vector<T>& vec)
+  {
+    return sizeof(ListSize) + vec.size() * sizeof(T);
+  }
+
+  static void serialize(const std::vector<T>& vec, char* buffer)
+  {
+    ListSize size = vec.size();
+    std::memcpy(buffer, &size, sizeof(size));
+    std::memcpy(buffer + sizeof(size), vec.data(), sizeof(T) * size);
+  }
+};
+
+template <typename Arithmetic>
+struct ValueDescriptor
+{
+  static_assert(std::is_arithmetic<Arithmetic>::value, "Unsupported type");
+
+  static const ValueTag tag =
+    (std::is_same<Arithmetic, float>::value)
+  ? tag_float
+  : (std::is_same<Arithmetic, double>::value)
+  ? tag_double
+  : (std::is_signed<Arithmetic>::value)
+  ? (sizeof(Arithmetic) == 1)
+  ? tag_int8
+  : (sizeof(Arithmetic) == 2)
+  ? tag_int16
+  : (sizeof(Arithmetic) == 4)
+  ? tag_int32
+  : tag_int64
+  : (sizeof(Arithmetic) == 1)
+  ? tag_uint8
+  : (sizeof(Arithmetic) == 2)
+  ? tag_uint16
+  : (sizeof(Arithmetic) == 4)
+  ? tag_uint32
+  : tag_uint64;
+
+  static constexpr std::size_t size(const Arithmetic&)
+  { return sizeof(Arithmetic); }
+
+  static void serialize(const Arithmetic& a, char* buffer)
+  {
+    std::memcpy(buffer, &a, sizeof(a));
+  }
+};
+
+template <typename T>
+std::size_t serializedSize(const T& t)
+{
+  return ValueDescriptor<T>::size(t);
+}
+
+template <typename T>
+void serialize(const T& t, char* buffer)
+{
+  ValueDescriptor<T>::serialize(t, buffer);
+}
 
 } // namespace kvs
 

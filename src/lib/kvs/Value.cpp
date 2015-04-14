@@ -42,4 +42,4 @@ bool readValue(const char*& begin, const char* end, TypedValue& result)
   );
 }
 
-} // namespace
+} // namespace kvs

@@ -4,6 +4,7 @@
 #include <kvs/Reactor.hpp>
 #include <kvs/TextCommandHandler.hpp>
 #include <kvs/ListenHandler.hpp>
+#include <kvs/Store.hpp>
 
 using namespace kvs;
 
@@ -11,6 +12,8 @@ int main(int argc, const char* argv[])
 {
   (void)argc;
   (void)argv;
+
+  Store store("/tmp/kvs_store.db");
 
   Reactor reactor;
 

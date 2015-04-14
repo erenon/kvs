@@ -11,8 +11,7 @@ ReadBuffer::ReadBuffer(const char* buffer, std::size_t size)
 
 bool ReadBuffer::read(char* output, std::size_t size)
 {
-  std::size_t readAvail = _end - _current;
-  if (readAvail >= size)
+  if (_current + size < _end)
   {
     memcpy(output, _current, size);
     _current += size;
