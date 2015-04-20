@@ -19,7 +19,8 @@ int main(int argc, const char* argv[])
 
   // Add console
   reactor.addHandler<TextCommandHandler>(
-    STDIN_FILENO, EPOLLIN, STDIN_FILENO, reactor
+    STDIN_FILENO, EPOLLIN,
+    STDIN_FILENO, STDOUT_FILENO, store, reactor
   );
 
   // Add server

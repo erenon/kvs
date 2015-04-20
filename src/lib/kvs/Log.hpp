@@ -2,6 +2,7 @@
 #define KVS_LOG_HPP_
 
 #include <boost/log/trivial.hpp>
+#include <boost/log/utility/manipulators/dump.hpp>
 
 namespace kvs {
 
@@ -9,6 +10,8 @@ namespace kvs {
 #define KVS_LOG_INFO    BOOST_LOG_TRIVIAL(info)
 #define KVS_LOG_WARNING BOOST_LOG_TRIVIAL(warning)
 #define KVS_LOG_ERROR   BOOST_LOG_TRIVIAL(error)
+
+typedef boost::log::dump_manip LogArray;
 
 } // namespace kvs
 

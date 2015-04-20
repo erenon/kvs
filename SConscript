@@ -24,6 +24,7 @@ testDefines = env['CPPDEFINES'] + ['BOOST_TEST_DYN_LINK', 'BOOST_TEST_MAIN']
 
 testPrograms = [
   'IntegrationTest',
+  'StoreTest',
   'Value'
 ]
 

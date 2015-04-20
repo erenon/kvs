@@ -10,7 +10,7 @@ class ReadBuffer
 public:
   ReadBuffer(const char* buffer, std::size_t size);
 
-  bool read(char* output, std::size_t size);
+  bool read(char* output, const std::size_t size);
 
   template <typename Field>
   bool read(Field& output)
@@ -44,6 +44,23 @@ private:
   std::unique_ptr<char[]> _buffer;
   std::size_t _pWrite;
   std::size_t _pRead;
+};
+
+class FixWriteBuffer
+{
+public:
+  FixWriteBuffer(char* buffer);
+
+  void write(const void* input, const std::size_t size);
+
+  template <typename Field>
+  void write(const Field& input)
+  {
+    write(reinterpret_cast<const void*>(&input), sizeof(Field));
+  }
+
+private:
+  char* _current;
 };
 
 } // namespace kvs

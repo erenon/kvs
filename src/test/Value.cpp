@@ -21,7 +21,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T>& ts)
   return out;
 }
 
-} // namespace kvs
+} // namespace std
 
 template <typename T>
 void checkMatch(const char* input, const T& expected)

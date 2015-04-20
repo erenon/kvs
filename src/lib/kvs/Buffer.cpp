@@ -9,9 +9,9 @@ ReadBuffer::ReadBuffer(const char* buffer, std::size_t size)
    _end(buffer + size)
 {}
 
-bool ReadBuffer::read(char* output, std::size_t size)
+bool ReadBuffer::read(char* output, const std::size_t size)
 {
-  if (_current + size < _end)
+  if (_current + size <= _end)
   {
     memcpy(output, _current, size);
     _current += size;
@@ -64,5 +64,14 @@ void FixBuffer::rewind()
   _pWrite = readAvailable();
   _pRead = 0;
 }
+
+FixWriteBuffer::FixWriteBuffer(char* buffer) :_current(buffer) {}
+
+void FixWriteBuffer::write(const void* input, const std::size_t size)
+{
+  memcpy(_current, input, size);
+  _current += size;
+}
+
 
 } // namespace

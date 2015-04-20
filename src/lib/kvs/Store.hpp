@@ -5,7 +5,10 @@
 #include <string>
 #include <memory>
 
+#include <sys/uio.h>
+
 #include <kvs/Fd.hpp>
+#include <kvs/Command.hpp>  // Key
 
 namespace kvs {
 
@@ -15,16 +18,23 @@ namespace kvs {
  */
 class Store
 {
-  typedef std::unordered_map<std::string, std::unique_ptr<char[]>> Container;
+  typedef std::unordered_map<
+    std::string,
+    std::pair<std::size_t, std::unique_ptr<char[]>>
+  > Container;
 
 public:
   Store(const char* persStore);
 
   void writePersStore(const char* command, const std::size_t size);
+  void writePersStore(const iovec* pIovec, const std::size_t vecSize);
 
-  std::unique_ptr<char[]>& operator[](const std::string& key);
+  Container::mapped_type& operator[](const std::string& key);
   Container::iterator find(const std::string& key);
   Container::iterator end();
+
+  Container::mapped_type& operator[](const Key& key) { return (*this)[std::string(key)]; };
+  Container::iterator find(const Key& key) { return find(std::string(key)); }
 
 private:
   Fd _persStore;

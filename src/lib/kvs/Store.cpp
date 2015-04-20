@@ -39,7 +39,26 @@ void Store::writePersStore(const char* command, const std::size_t size)
   } // else: persistent storage was turned off
 }
 
-std::unique_ptr<char[]>& Store::operator[](const std::string& key)
+void Store::writePersStore(const iovec* pIovec, const std::size_t vecSize)
+{
+  if (_persStore)
+  {
+    ssize_t wsize = writev(*_persStore, pIovec, vecSize);
+
+    ssize_t expected = 0;
+    for (std::size_t i = 0; i < vecSize; ++i)
+    {
+      expected += pIovec[i].iov_len;
+    }
+
+    if (wsize < expected)
+    {
+      throw std::runtime_error(std::string("Failed to write persistent store: ") + strerror(errno));
+    }
+  } // else: persistent storage was turned off
+}
+
+Store::Container::mapped_type& Store::operator[](const std::string& key)
 {
   return _store[key];
 }

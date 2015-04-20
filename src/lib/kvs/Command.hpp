@@ -2,8 +2,15 @@
 #define KVS_COMMAND_HPP_
 
 #include <cstdint>
+#include <memory>
+
+#include <boost/utility/string_ref.hpp>
+
+#include <kvs/Buffer.hpp>
 
 namespace kvs {
+
+typedef boost::string_ref Key;
 
 enum class CommandType : uint16_t
 {
@@ -11,38 +18,39 @@ enum class CommandType : uint16_t
   SET,
 };
 
-class Command
+class Store;
+
+class SetCommand
 {
 public:
-  typedef std::size_t Size;
+  SetCommand(
+    const Key& key,
+    std::size_t serializedValueSize,
+    const char* serializedValue
+  )
+    :_key(key),
+     _serializedValueSize(serializedValueSize),
+     _serializedValue(serializedValue)
+  {}
 
-  Command(const char* header);
-  Command(const char* header, const char* body);
-
-  Size size() const
-  {
-    return _pHeader->size;
-  }
-
-  CommandType type() const
-  {
-    return _pHeader->type;
-  }
-
-  const char* payload() const
-  {
-    return _pBody;
-  }
+  void execute(Store& store) const;
+  std::pair<const char*, std::size_t> value() const;
 
 private:
-  struct Header
-  {
-    const Size size;
-    const CommandType type;
-  } __attribute__((packed));
+  Key _key;
+  std::size_t _serializedValueSize;
+  const char* _serializedValue;
+};
 
-  const Header* _pHeader;
-  const char* _pBody;
+class GetCommand
+{
+public:
+  GetCommand(const Key& key) : _key(key) {}
+
+  SetCommand execute(Store& store) const;
+
+private:
+  Key _key;
 };
 
 } // namespace kvs
