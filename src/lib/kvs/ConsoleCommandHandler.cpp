@@ -8,7 +8,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
 
-#include <kvs/TextCommandHandler.hpp>
+#include <kvs/ConsoleCommandHandler.hpp>
 #include <kvs/Reactor.hpp>
 #include <kvs/Log.hpp>
 #include <kvs/Command.hpp>
@@ -40,7 +40,7 @@ std::ostream& operator<<(std::ostream& out, const std::vector<T>& ts)
 
 namespace kvs {
 
-TextCommandHandler::TextCommandHandler(
+ConsoleCommandHandler::ConsoleCommandHandler(
   int in,
   int out,
   Store& store,
@@ -50,9 +50,11 @@ TextCommandHandler::TextCommandHandler(
    _out(out),
    _store(store),
    _reactor(reactor)
-{}
+{
+  write(_out, "> ", 2);
+}
 
-bool TextCommandHandler::dispatch()
+bool ConsoleCommandHandler::dispatch()
 {
   char buff[LINE_MAX];
   ssize_t rsize = read(_in, buff, LINE_MAX);
@@ -89,6 +91,8 @@ bool TextCommandHandler::dispatch()
     KVS_LOG_ERROR << "TextCommandHandler read error: " << strerror(errno);
     return false;
   }
+
+  write(_out, "> ", 2);
 
   return true;
 }
@@ -144,7 +148,7 @@ void writeCommand(const SetCommand& command, int fd)
 
 } // namespace
 
-const char* TextCommandHandler::processCommand(const char* buffer, const char* end)
+const char* ConsoleCommandHandler::processCommand(const char* buffer, const char* end)
 {
   // get command type from buffer
   CommandType commandType;

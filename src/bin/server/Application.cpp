@@ -2,7 +2,7 @@
 
 #include <kvs/Log.hpp>
 #include <kvs/Reactor.hpp>
-#include <kvs/TextCommandHandler.hpp>
+#include <kvs/ConsoleCommandHandler.hpp>
 #include <kvs/ListenHandler.hpp>
 #include <kvs/Store.hpp>
 
@@ -18,7 +18,7 @@ int main(int argc, const char* argv[])
   Reactor reactor;
 
   // Add console
-  reactor.addHandler<TextCommandHandler>(
+  reactor.addHandler<ConsoleCommandHandler>(
     STDIN_FILENO, EPOLLIN,
     STDIN_FILENO, STDOUT_FILENO, store, reactor
   );

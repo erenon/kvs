@@ -1,5 +1,5 @@
-#ifndef KVS_TEXTCOMMANDHANDLER_HPP_
-#define KVS_TEXTCOMMANDHANDLER_HPP_
+#ifndef KVS_CONSOLECOMMANDHANDLER_HPP_
+#define KVS_CONSOLECOMMANDHANDLER_HPP_
 
 #include <kvs/IOHandler.hpp>
 #include <kvs/Fd.hpp>
@@ -9,11 +9,10 @@ namespace kvs {
 class Reactor;
 class Store;
 
-// TODO rename to ConsoleCommandHandler
-class TextCommandHandler : public IOHandler
+class ConsoleCommandHandler : public IOHandler
 {
 public:
-  TextCommandHandler(
+  ConsoleCommandHandler(
     int in,
     int out,
     Store& store,
@@ -33,4 +32,4 @@ private:
 
 } // namespace kvs
 
-#endif // KVS_TEXTCOMMANDHANDLER_HPP_
+#endif // KVS_CONSOLECOMMANDHANDLER_HPP_
