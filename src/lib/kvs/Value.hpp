@@ -9,6 +9,7 @@
 #define BOOST_MPL_LIMIT_LIST_SIZE 30
 #define BOOST_MPL_LIMIT_VECTOR_SIZE 30
 #include <boost/variant/variant.hpp>
+#include <boost/variant/get.hpp>
 
 #include <kvs/Buffer.hpp>
 

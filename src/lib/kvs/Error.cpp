@@ -1,5 +1,6 @@
 #include <cstdio> // perror
 #include <exception> // terminate
+#include <stdexcept>
 
 #include <kvs/Error.hpp>
 
@@ -10,6 +11,14 @@ void failure(const char* msg)
 {
   perror(msg);
   std::terminate();
+}
+
+void check(bool ok)
+{
+  if (!ok)
+  {
+    throw std::runtime_error("Check failed");
+  }
 }
 
 } // namespace

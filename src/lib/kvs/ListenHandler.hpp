@@ -1,7 +1,7 @@
 #ifndef KVS_LISTENHANDLER_HPP_
 #define KVS_LISTENHANDLER_HPP_
 
-#include <arpa/inet.h> // in_port_t
+#include <cstdint>
 
 #include <kvs/IOHandler.hpp>
 #include <kvs/Fd.hpp>
@@ -9,16 +9,19 @@
 
 namespace kvs {
 
+class Store;
+
 class ListenHandler : public IOHandler
 {
 public:
-  ListenHandler(Reactor& reactor, in_port_t port);
+  ListenHandler(Reactor& reactor, uint16_t port, Store& store);
 
   bool dispatch() override;
 
 private:
   Reactor& _reactor;
   Fd _listenSocket;
+  Store& _store;
 };
 
 } // namespace kvs

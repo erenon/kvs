@@ -13,6 +13,7 @@
 #include <kvs/Log.hpp>
 #include <kvs/Command.hpp>
 #include <kvs/Value.hpp>
+#include <kvs/Error.hpp>
 
 namespace std {
 
@@ -51,7 +52,17 @@ ConsoleCommandHandler::ConsoleCommandHandler(
    _store(store),
    _reactor(reactor)
 {
-  write(_out, "> ", 2);
+  ssize_t wsize = write(_out, "> ", 2);
+  (void)wsize;
+}
+
+ConsoleCommandHandler::~ConsoleCommandHandler()
+{
+  if (_in == STDIN_FILENO)
+  {
+    fclose(stdin);
+  }
+  close(_in);
 }
 
 bool ConsoleCommandHandler::dispatch()
@@ -92,7 +103,8 @@ bool ConsoleCommandHandler::dispatch()
     return false;
   }
 
-  write(_out, "> ", 2);
+  ssize_t wsize = write(_out, "> ", 2);
+  (void)wsize;
 
   return true;
 }
@@ -143,7 +155,8 @@ void writeCommand(const SetCommand& command, int fd)
   stream << value << '\n';
   std::string textValue = stream.str();
 
-  write(fd, textValue.data(), textValue.size());
+  std::size_t wsize = write(fd, textValue.data(), textValue.size());
+  if (wsize != textValue.size()) { failure("ConsoleCommandHandler write");}
 }
 
 } // namespace

@@ -3,8 +3,26 @@
 #include <kvs/Command.hpp>
 #include <kvs/Store.hpp>
 #include <kvs/Value.hpp>
+#include <kvs/Buffer.hpp>
+#include <kvs/Error.hpp>
 
 namespace kvs {
+
+const CommandType GetCommand::_tag = CommandType::GET;
+const CommandType SetCommand::_tag = CommandType::SET;
+
+SetCommand::SetCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+
+  CommandType actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+  check(reader.read(_serializedValueSize));
+  _serializedValue = reader.get();
+}
 
 void SetCommand::execute(Store& store) const
 {
@@ -25,6 +43,36 @@ std::pair<const char*, std::size_t> SetCommand::value() const
   return {_serializedValue, _serializedValueSize};
 }
 
+void SetCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1 + sizeof(_serializedValueSize) + _serializedValueSize;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<CommandType*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
+
+  output[3].iov_base = const_cast<std::size_t*>(&_serializedValueSize);
+  output[3].iov_len = sizeof(_serializedValueSize);
+
+  output[4].iov_base = const_cast<char*>(_serializedValue);
+  output[4].iov_len = _serializedValueSize;
+}
+
+GetCommand::GetCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  CommandType actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
 SetCommand GetCommand::execute(Store& store) const
 {
   auto finder = store.find(_key);
@@ -40,6 +88,20 @@ SetCommand GetCommand::execute(Store& store) const
     SetCommand result(_key, NullValue::serializedSize, NullValue::serializedValue());
     return result;
   }
+}
+
+void GetCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<CommandType*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
 }
 
 } // namespace

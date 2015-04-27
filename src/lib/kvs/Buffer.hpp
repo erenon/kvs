@@ -2,6 +2,9 @@
 #define KVS_BUFFER_HPP_
 
 #include <memory>
+#include <vector>
+
+#include <boost/utility/string_ref.hpp>
 
 namespace kvs {
 
@@ -18,9 +21,30 @@ public:
     return read(reinterpret_cast<char*>(&output), sizeof(Field));
   }
 
+  bool read(boost::string_ref& string);
+
+  const char* get() { return _current; }
+
 private:
   const char* _current;
   const char* _end;
+};
+
+class WriteBuffer
+{
+public:
+  WriteBuffer() = default;
+
+  void write(const void* buffer, std::size_t size);
+
+  const char* read();
+  std::size_t readAvailable() const;
+  void doneRead(std::size_t size);
+
+private:
+  std::vector<char> _buffer;
+  std::size_t _pRead = 0;
+  std::size_t _pWrite = 0;
 };
 
 class FixBuffer
@@ -39,8 +63,10 @@ public:
 
   void rewind();
 
+  void enlarge();
+
 private:
-  const std::size_t _bufferSize;
+  std::size_t _bufferSize;
   std::unique_ptr<char[]> _buffer;
   std::size_t _pWrite;
   std::size_t _pRead;

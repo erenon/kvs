@@ -2,7 +2,6 @@
 #define KVS_CONSOLECOMMANDHANDLER_HPP_
 
 #include <kvs/IOHandler.hpp>
-#include <kvs/Fd.hpp>
 
 namespace kvs {
 
@@ -18,6 +17,8 @@ public:
     Store& store,
     Reactor& reactor
   );
+
+  ~ConsoleCommandHandler();
 
   bool dispatch() override;
 

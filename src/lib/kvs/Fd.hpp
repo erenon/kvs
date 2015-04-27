@@ -2,6 +2,7 @@
 #define KVS_FD_HPP_
 
 #include <unistd.h>
+#include <kvs/Log.hpp>
 
 namespace kvs {
 
@@ -42,6 +43,7 @@ public:
   {
     if (_fd >= 0)
     {
+      KVS_LOG_DEBUG << "Close Fd: " << _fd;
       _close(_fd);
       _fd = -1;
     }

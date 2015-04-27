@@ -8,6 +8,8 @@ namespace kvs {
 __attribute__ ((noreturn))
 void failure(const char* msg);
 
+void check(bool ok);
+
 } // namespace kvs
 
 #endif // KVS_ERROR_HPP_

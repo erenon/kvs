@@ -18,7 +18,7 @@ env.Program('bin/kvsServer', Glob('src/bin/server/*.cpp'), LIBS = serverLibs)
 # Tests
 #
 
-testLibs = env['LIBS'] + ['KVS', 'boost_unit_test_framework']
+testLibs = env['LIBS'] + ['KVS', 'boost_unit_test_framework', 'boost_thread', 'boost_system']
 
 testDefines = env['CPPDEFINES'] + ['BOOST_TEST_DYN_LINK', 'BOOST_TEST_MAIN']
 

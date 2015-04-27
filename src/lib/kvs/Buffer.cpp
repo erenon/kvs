@@ -1,4 +1,5 @@
 #include <cstring> // memmove
+#include <algorithm>
 
 #include <kvs/Buffer.hpp>
 
@@ -19,6 +20,49 @@ bool ReadBuffer::read(char* output, const std::size_t size)
   }
 
   return false;
+}
+
+bool ReadBuffer::read(boost::string_ref& string)
+{
+  const char* strEnd = std::find(_current, _end, '\0');
+  if (strEnd == _end) { return false; }
+  string = boost::string_ref(_current, strEnd - _current);
+  _current = strEnd + 1;
+  return true;
+}
+
+void WriteBuffer::write(const void* buffer, std::size_t size)
+{
+  if (_pWrite + size < _buffer.size())
+  {
+    memcpy(_buffer.data() + _pWrite, buffer, size);
+    _pWrite += size;
+  }
+  else
+  {
+    auto newReadSize = readAvailable() + size;
+    std::vector<char> newBuffer(newReadSize * 2);
+
+    memcpy(newBuffer.data(), _buffer.data(), readAvailable());
+    memcpy(newBuffer.data() + readAvailable(), buffer, size);
+    _pRead = 0;
+    _pWrite= newReadSize;
+  }
+}
+
+const char* WriteBuffer::read()
+{
+  return _buffer.data() + _pRead;
+}
+
+std::size_t WriteBuffer::readAvailable() const
+{
+  return _pWrite - _pRead;
+}
+
+void WriteBuffer::doneRead(std::size_t size)
+{
+  _pRead += size;
 }
 
 FixBuffer::FixBuffer(std::size_t size)
@@ -61,6 +105,16 @@ void FixBuffer::doneRead(std::size_t size)
 void FixBuffer::rewind()
 {
   memmove(_buffer.get(), read(), readAvailable());
+  _pWrite = readAvailable();
+  _pRead = 0;
+}
+
+void FixBuffer::enlarge()
+{
+  _bufferSize *= 2;
+  std::unique_ptr<char[]> newBuffer(new char[_bufferSize]);
+  memcpy(newBuffer.get(), read(), readAvailable());
+  std::swap(_buffer, newBuffer);
   _pWrite = readAvailable();
   _pRead = 0;
 }

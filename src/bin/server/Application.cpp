@@ -24,7 +24,7 @@ int main(int argc, const char* argv[])
   );
 
   // Add server
-  ListenHandler server(reactor, 1337);
+  ListenHandler server(reactor, 1337, store);
 
   while (! reactor.isStopped())
   {
