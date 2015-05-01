@@ -43,19 +43,17 @@ bool readValue(const char*& begin, const char* end, TypedValue& result)
   rule<float> float_= qi::lexeme[strict_real<float>() >> 'f'];
   rule<double> double_= strict_real<double>();
   rule<unsigned> uint = qi::lexeme["0x" >> qi::hex] | qi::uint_;
-  rule<std::vector<char>> str = qi::lexeme['"' >> +(qi::char_ - '"') >> '"'];
 
-  auto scalar = float_ | double_ | uint | qi::int_ | str;
-
-  auto afloat = '[' >> (float_ % ',') >> ']';
-  auto adouble = '[' >> (double_ % ',') >> ']';
-  auto auint = '[' >> (uint % ',') >> ']';
-  auto aint = '[' >> (qi::int_ % ',') >> ']';
+  rule<std::vector<char>>     str = qi::lexeme['"' >> +(qi::char_ - '"') >> '"'];
+  rule<std::vector<float>>    afloat  = '[' >> (float_ % ',') >> ']';
+  rule<std::vector<double>>   adouble = '[' >> (double_ % ',') >> ']';
+  rule<std::vector<unsigned>> auint   = '[' >> (uint % ',') >> ']';
+  rule<std::vector<int>>      aint    = '[' >> (qi::int_ % ',') >> ']';
 
   return phrase_parse(
     begin,
     end,
-    (scalar | afloat | adouble | auint | aint),
+    (float_ | double_ | uint | qi::int_ | str | afloat | adouble | auint | aint),
     space,
     result
   );
