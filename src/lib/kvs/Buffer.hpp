@@ -25,6 +25,12 @@ public:
 
   const char* get() { return _current; }
 
+  explicit operator bool() const { return _current != _end; }
+
+  std::size_t size() const { return _end - _current; }
+
+  void discard(std::size_t size) { _current += size; }
+
 private:
   const char* _current;
   const char* _end;

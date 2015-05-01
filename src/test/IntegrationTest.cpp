@@ -12,9 +12,9 @@
 
 using namespace kvs;
 
-void server(Reactor& reactor, int port, boost::latch& started)
+void server(Reactor& reactor, int port, boost::latch& started, const char* pStore)
 {
-  Store store("/tmp/kvs-inttest.db");
+  Store store(pStore);
   ListenHandler server(reactor, port, store);
 
   started.count_down();
@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE(ConnectSetGetInt)
   boost::latch serverStarted(1);
 
   std::thread serverThread(
-    server, std::ref(reactor), port, std::ref(serverStarted)
+    server, std::ref(reactor), port, std::ref(serverStarted), nullptr
   );
 
   serverStarted.wait();
@@ -50,4 +50,63 @@ BOOST_AUTO_TEST_CASE(ConnectSetGetInt)
   serverThread.join();
 
   BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE(PersistentStore)
+{
+  unlink("/tmp/kvs-inttest.db");
+
+  {
+    Reactor reactor;
+    const int port = 1339;
+    boost::latch serverStarted(1);
+
+    std::thread serverThread(
+      server, std::ref(reactor), port, std::ref(serverStarted), "/tmp/kvs-inttest.db"
+    );
+
+    serverStarted.wait();
+
+    Connection connection("127.0.0.1", port);
+
+    connection.set<int>("foo", 123);
+    connection.set<float>("bar", 456);
+    connection.set<std::vector<int>>("baz", std::vector<int>{1, 2, 3});
+
+    int foo = 0;
+    BOOST_CHECK(connection.get("foo", foo));
+
+    reactor.stop();
+
+    serverThread.join();
+  }
+
+  {
+    Reactor reactor;
+    const int port = 1340;
+    boost::latch serverStarted(1);
+
+    std::thread serverThread(
+      server, std::ref(reactor), port, std::ref(serverStarted), "/tmp/kvs-inttest.db"
+    );
+
+    serverStarted.wait();
+
+    int foo = 0;
+    float bar = 0;
+    std::vector<int> baz;
+
+    Connection connection("127.0.0.1", port);
+    BOOST_CHECK(connection.get("foo", foo));
+    BOOST_CHECK(connection.get("bar", bar));
+    BOOST_CHECK(connection.get("baz", baz));
+
+    BOOST_CHECK_EQUAL(foo, 123);
+    BOOST_CHECK_EQUAL(bar, 456);
+    BOOST_CHECK((baz == std::vector<int>{1, 2, 3}));
+
+    reactor.stop();
+
+    serverThread.join();
+  }
 }

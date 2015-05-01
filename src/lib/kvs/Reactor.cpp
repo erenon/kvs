@@ -38,7 +38,7 @@ bool Reactor::dispatch()
   const int eventCount = epoll_wait(*_epollfd, events, eventsSize, 1000 /* 1s */);
   if (eventCount < 0) { failure("epoll_wait"); }
 
-  KVS_LOG_DEBUG << "Reactor received #" << eventCount << " event(s)";
+//  KVS_LOG_DEBUG << "Reactor received #" << eventCount << " event(s)";
 
   for (int eventIndex = 0; eventIndex < eventCount; ++eventIndex)
   {

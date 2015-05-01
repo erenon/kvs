@@ -11,8 +11,8 @@ class Fd
 public:
   typedef int (*CloseFn)(int);
 
-  Fd() {}
-  Fd(int fd) : _fd(fd) {}
+  Fd() = default;
+  explicit Fd(int fd) : _fd(fd) {}
   Fd(int fd, CloseFn close) : _fd(fd), _close(close) {}
 
   Fd(const Fd&) = delete;
@@ -34,6 +34,13 @@ public:
       rhs._fd = -1;
     }
 
+    return *this;
+  }
+
+  Fd& operator=(int fd)
+  {
+    close();
+    _fd = fd;
     return *this;
   }
 

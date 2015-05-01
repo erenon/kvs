@@ -11,7 +11,8 @@ AddOption(
 env = Environment(
   CPPPATH = ['src/lib/'],
   CPPDEFINES=[
-    'BOOST_LOG_DYN_LINK'
+    'BOOST_LOG_DYN_LINK',
+    'BOOST_SPIRIT_THREADSAFE'
   ],
   CXXFLAGS=[
     '-std=c++11',

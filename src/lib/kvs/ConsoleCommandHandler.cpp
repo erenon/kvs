@@ -76,10 +76,10 @@ bool ConsoleCommandHandler::dispatch()
     {
       const char* start = &buff[0];
       start = processCommand(start, start + rsize - 1);
-//      if (!start)
-//      {
-//
-//      }
+      if (!start)
+      {
+        KVS_LOG_WARNING << "Failed to process command";
+      }
       // TODO process subsequent commands
     }
     else
@@ -138,12 +138,13 @@ bool readCommand(const char*& begin, const char* end, CommandType& result)
   );
 }
 
-bool readKey(const char*& begin, const char* end, Key& result)
+bool readKey(const char*& begin, const char* end, std::string& result)
 {
+  while (begin != end && *begin == ' ') { ++begin; }
   const char* space = std::find(begin, end, ' ');
-  result = Key(begin, space - begin);
+  result.assign(begin, space);
   begin = space;
-  return true;
+  return result.size();
 }
 
 void writeCommand(const SetCommand& command, int fd)
@@ -176,7 +177,7 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
   {
     case CommandType::GET:
     {
-      Key key;
+      std::string key;
       if (! readKey(buffer, end, key)) { return nullptr; }
 
       GetCommand command(key);
@@ -188,7 +189,7 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
     }
     case CommandType::SET:
     {
-      Key key;
+      std::string key;
       if (! readKey(buffer, end, key)) { return nullptr; }
 
       TypedValue value;

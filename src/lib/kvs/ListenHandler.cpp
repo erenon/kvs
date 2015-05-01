@@ -60,11 +60,13 @@ bool ListenHandler::dispatch()
     client = accept4(*_listenSocket, nullptr, nullptr, SOCK_NONBLOCK);
     if (client >= 0)
     {
-      _reactor.addHandler<CommandHandler>(
+      if (_reactor.addHandler<CommandHandler>(
         client, EPOLLIN,
         client, _store, _reactor
-      );
-      KVS_LOG_INFO << "Client accepted";
+      ))
+      {
+        KVS_LOG_INFO << "Client accepted";
+      }
     }
     else
     {

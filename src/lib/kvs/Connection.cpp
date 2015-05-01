@@ -8,14 +8,13 @@
 
 #include <kvs/Connection.hpp>
 
-namespace kvs
-{
+namespace kvs {
 
 Connection::Connection(const char* serverIp, int serverPort)
 {
   sockaddr_in serverAddr;
 
-  if ((_serverConn = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
+  if (! (_serverConn = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP)))
   {
     failure("Connection socket");
   }

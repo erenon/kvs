@@ -8,7 +8,7 @@ using namespace kvs;
 
 BOOST_AUTO_TEST_CASE(StoreBasics)
 {
-  Store store("/tmp/kvs-unit-store.db");
+  Store store(nullptr);
 
   auto end = store.find(Key("foo"));
   BOOST_REQUIRE(end == store.end());

@@ -26,7 +26,13 @@ SetCommand::SetCommand(command::deserialize, const char* buffer, command::Size s
 
 void SetCommand::execute(Store& store) const
 {
-  // TODO write persistent store
+  // write persistent store
+  {
+    iovec serialized[serializedVectorSize];
+    std::size_t fullSize;
+    serialize(serialized, fullSize);
+    store.writePersStore(serialized, serializedVectorSize, fullSize);
+  }
 
   auto&& entry = store[_key];
   if (entry.first < _serializedValueSize)
@@ -73,7 +79,7 @@ GetCommand::GetCommand(command::deserialize, const char* buffer, command::Size s
   check(reader.read(_key));
 }
 
-SetCommand GetCommand::execute(Store& store) const
+SetCommand GetCommand::execute(const Store& store) const
 {
   auto finder = store.find(_key);
   if (finder != store.end())

@@ -31,23 +31,6 @@ struct deserialize {};
 
 class Store;
 
-//class Command
-//{
-//public:
-//  typedef uint64_t Size;
-//
-//  typedef boost::string_ref Key;
-//
-//  enum class Type : uint16_t
-//  {
-//    GET,
-//    SET,
-//  };
-//
-//  virtual ~Command() {}
-//  virtual void execture(Store& store) const;
-//};
-
 class SetCommand
 {
 public:
@@ -85,7 +68,7 @@ public:
 
   GetCommand(command::deserialize, const char* buffer, command::Size size);
 
-  SetCommand execute(Store& store) const;
+  SetCommand execute(const Store& store) const;
 
   static constexpr int serializedVectorSize = 3;
 
