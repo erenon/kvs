@@ -22,6 +22,7 @@ enum class Tag : uint16_t
   GET,
   SET,
   ADD,
+  SUM,
 };
 
 struct deserialize {};
@@ -107,6 +108,25 @@ private:
   Key _key;
   std::size_t _serializedValueSize;
   const char* _serializedValue;
+};
+
+class SumCommand
+{
+public:
+  SumCommand(const Key& key) : _key(key) {}
+
+  SumCommand(command::deserialize, const char* buffer, command::Size size);
+
+  SetCommand execute(const Store& store) const;
+
+  static constexpr int serializedVectorSize = 3;
+
+  void serialize(iovec* output, command::Size& size) const;
+
+private:
+  static const command::Tag _tag;
+
+  Key _key;
 };
 
 } // namespace kvs

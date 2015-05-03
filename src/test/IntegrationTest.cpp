@@ -139,3 +139,32 @@ BOOST_AUTO_TEST_CASE(AddCommandTest)
 
   BOOST_CHECK(true);
 }
+
+BOOST_AUTO_TEST_CASE(SumCommandTest)
+{
+  Reactor reactor;
+  const int port = 1338;
+  boost::latch serverStarted(1);
+
+  std::thread serverThread(
+    server, std::ref(reactor), port, std::ref(serverStarted), nullptr
+  );
+
+  serverStarted.wait();
+
+  Connection connection("127.0.0.1", port);
+
+  connection.add("iarr", std::vector<int>{1,2,3});
+  connection.add("iarr", int(4));
+  connection.add("iarr", std::vector<int>{5,6,7});
+
+  int sum = 0;
+  BOOST_CHECK(connection.sum("iarr", sum));
+  BOOST_CHECK_EQUAL(28, sum);
+
+  reactor.stop();
+
+  serverThread.join();
+
+  BOOST_CHECK(true);
+}

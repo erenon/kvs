@@ -121,6 +121,7 @@ struct TextCommands : qi::symbols<char, command::Tag>
       ("get" , command::Tag::GET)
       ("set" , command::Tag::SET)
       ("add" , command::Tag::ADD)
+      ("sum" , command::Tag::SUM)
     ;
   }
 
@@ -223,6 +224,18 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
 
       AddCommand command(key, valueSize, valueBuffer.get());
       command.execute(_store);
+
+      break;
+    }
+    case command::Tag::SUM:
+    {
+      std::string key;
+      if (! readKey(buffer, end, key)) { return nullptr; }
+
+      SumCommand command(key);
+      SetCommand result = command.execute(_store);
+
+      writeCommand(result, _out);
 
       break;
     }

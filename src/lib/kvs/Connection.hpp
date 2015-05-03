@@ -33,6 +33,9 @@ public:
   template <typename Field>
   void add(const Key& key, const Field& value);
 
+  template <typename Field>
+  bool sum(const Key& key, Field& result);
+
 private:
   template <typename Command>
   void sendCommand(const Command& command);
@@ -98,6 +101,24 @@ void Connection::add(const Key& key, const Field& value)
 
   AddCommand req(key, serSize, _sendBuffer.get());
   sendCommand(req);
+}
+
+template <typename Field>
+bool Connection::sum(const Key& key, Field& result)
+{
+  SumCommand req(key);
+  sendCommand(req);
+
+  SetCommand resp = recvCommand<SetCommand>();
+
+  auto value = resp.value();
+  TypedValue tvalue = value::deserialize(value.first, value.second);
+
+  Field* pResult = boost::get<Field>(&tvalue);
+  if (!pResult) { return false; }
+
+  result = *pResult;
+  return true;
 }
 
 template <typename Command>

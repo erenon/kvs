@@ -11,6 +11,7 @@ namespace kvs {
 const command::Tag GetCommand::_tag = command::Tag::GET;
 const command::Tag SetCommand::_tag = command::Tag::SET;
 const command::Tag AddCommand::_tag = command::Tag::ADD;
+const command::Tag SumCommand::_tag = command::Tag::SUM;
 
 //
 // SET
@@ -138,6 +139,12 @@ AddCommand::AddCommand(command::deserialize, const char* buffer, command::Size s
 
 struct CreateSingularList : public boost::static_visitor<TypedValue>
 {
+  TypedValue operator()(const NullValue&) const
+  {
+    TypedValue result = NullValue{};
+    return result;
+  }
+
   template <typename T>
   TypedValue operator()(const T& item) const
   {
@@ -254,6 +261,85 @@ void AddCommand::serialize(iovec* output, command::Size& size) const
 
   output[4].iov_base = const_cast<char*>(_serializedValue);
   output[4].iov_len = _serializedValueSize;
+}
+
+//
+// SUM
+//
+
+struct SumList : public boost::static_visitor<TypedValue>
+{
+  template <typename T>
+  TypedValue operator()(const T&) const
+  {
+    TypedValue result = NullValue{};
+    return result;
+  }
+
+  template <typename T>
+  TypedValue operator()(const std::vector<T>& items) const
+  {
+    T sum = 0;
+    for (auto&& item : items)
+    {
+      sum += item;
+    }
+    TypedValue result(sum);
+    return result;
+  }
+};
+
+SumCommand::SumCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+SetCommand SumCommand::execute(const Store& store) const
+{
+  auto finder = store.find(_key);
+  if (finder != store.end())
+  {
+    // *finder is the requested value
+    TypedValue maybeList = value::deserialize(finder->second.second.get(), finder->second.first);
+    TypedValue sumVal = boost::apply_visitor(SumList{}, maybeList);
+
+    char buffer[64];
+    std::size_t serSize = value::serializedSize(sumVal);
+
+    if (serSize <= 64)
+    {
+      value::serialize(sumVal, buffer);
+      SetCommand result(_key, serSize, buffer);
+      return result;
+    }
+    else
+    {
+      KVS_LOG_ERROR << "Sum result serialized size was too large: " << serSize;
+    }
+  }
+
+  // not found (or too large)
+  SetCommand result(_key, NullValue::serializedSize, NullValue::serializedValue());
+  return result;
+}
+
+void SumCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
 }
 
 } // namespace

@@ -61,8 +61,6 @@ typedef boost::variant<
   float,
   double,
 
-  std::vector<NullValue>,
-
   std::vector<char>,
   std::vector<short>,
   std::vector<int>,
