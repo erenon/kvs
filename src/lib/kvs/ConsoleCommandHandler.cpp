@@ -113,19 +113,19 @@ namespace {
 
 namespace qi = boost::spirit::qi;
 
-struct TextCommands : qi::symbols<char, CommandType>
+struct TextCommands : qi::symbols<char, command::Tag>
 {
   TextCommands()
   {
     add
-      ("get" , CommandType::GET)
-      ("set" , CommandType::SET)
+      ("get" , command::Tag::GET)
+      ("set" , command::Tag::SET)
     ;
   }
 
 } g_commands;
 
-bool readCommand(const char*& begin, const char* end, CommandType& result)
+bool readCommand(const char*& begin, const char* end, command::Tag& result)
 {
   using boost::spirit::ascii::space;
 
@@ -165,17 +165,17 @@ void writeCommand(const SetCommand& command, int fd)
 const char* ConsoleCommandHandler::processCommand(const char* buffer, const char* end)
 {
   // get command type from buffer
-  CommandType commandType;
-  if (! readCommand(buffer, end, commandType))
+  command::Tag commandTag;
+  if (! readCommand(buffer, end, commandTag))
   {
     std::string command(buffer, end);
     KVS_LOG_WARNING << "Unrecognized command: " << command;
     return nullptr;
   }
 
-  switch (commandType)
+  switch (commandTag)
   {
-    case CommandType::GET:
+    case command::Tag::GET:
     {
       std::string key;
       if (! readKey(buffer, end, key)) { return nullptr; }
@@ -187,7 +187,7 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
 
       break;
     }
-    case CommandType::SET:
+    case command::Tag::SET:
     {
       std::string key;
       if (! readKey(buffer, end, key)) { return nullptr; }

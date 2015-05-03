@@ -13,17 +13,15 @@ namespace kvs {
 
 typedef boost::string_ref Key;
 
-// TODO rename CommandType to Tag
-// Move to command namespace
-enum class CommandType : uint16_t
+namespace command {
+
+typedef uint64_t Size;
+
+enum class Tag : uint16_t
 {
   GET,
   SET,
 };
-
-namespace command {
-
-typedef uint64_t Size;
 
 struct deserialize {};
 
@@ -54,7 +52,7 @@ public:
   void serialize(iovec* output, command::Size& size) const;
 
 private:
-  static const CommandType _tag;
+  static const command::Tag _tag;
 
   Key _key;
   std::size_t _serializedValueSize;
@@ -75,7 +73,7 @@ public:
   void serialize(iovec* output, command::Size& size) const;
 
 private:
-  static const CommandType _tag;
+  static const command::Tag _tag;
 
   Key _key;
 };

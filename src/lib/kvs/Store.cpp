@@ -88,7 +88,7 @@ Store::Container::const_iterator Store::end() const
 
 bool Store::executeCommand(ReadBuffer& reader)
 {
-  if (reader.size() < sizeof(command::Size) + sizeof(CommandType))
+  if (reader.size() < sizeof(command::Size) + sizeof(command::Tag))
   {
     KVS_LOG_WARNING << "Persistent store was too short";
     return false;
@@ -107,7 +107,7 @@ bool Store::executeCommand(ReadBuffer& reader)
     return false;
   }
 
-  CommandType comTag;
+  command::Tag comTag;
   reader.read(comTag);
 
   try
@@ -115,7 +115,7 @@ bool Store::executeCommand(ReadBuffer& reader)
 
     switch (comTag)
     {
-    case CommandType::SET:
+    case command::Tag::SET:
     {
       SetCommand input(command::deserialize{}, comBegin, payloadSize);
       input.execute(*this);

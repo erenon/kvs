@@ -27,7 +27,7 @@ bool CommandHandler::dispatch()
 
   _buffer.doneWrite(rsize);
 
-  while (_buffer.readAvailable() > sizeof(command::Size) + sizeof(CommandType))
+  while (_buffer.readAvailable() > sizeof(command::Size) + sizeof(command::Tag))
   {
     ReadBuffer reader(_buffer.read(), _buffer.readAvailable());
 
@@ -36,7 +36,7 @@ bool CommandHandler::dispatch()
 
     if (_buffer.readAvailable() < comSize) { break; }
 
-    CommandType comTag;
+    command::Tag comTag;
     reader.read(comTag);
 
     const char* comBegin = _buffer.read() + sizeof(comSize);
@@ -47,7 +47,7 @@ bool CommandHandler::dispatch()
 
       switch (comTag)
       {
-      case CommandType::GET:
+      case command::Tag::GET:
       {
         GetCommand input(command::deserialize{}, comBegin, payloadSize);
         SetCommand output = input.execute(_store);
@@ -59,7 +59,7 @@ bool CommandHandler::dispatch()
 
         break;
       }
-      case CommandType::SET:
+      case command::Tag::SET:
       {
         SetCommand input(command::deserialize{}, comBegin, payloadSize);
         input.execute(_store);

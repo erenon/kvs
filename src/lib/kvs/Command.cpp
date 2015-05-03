@@ -8,14 +8,14 @@
 
 namespace kvs {
 
-const CommandType GetCommand::_tag = CommandType::GET;
-const CommandType SetCommand::_tag = CommandType::SET;
+const command::Tag GetCommand::_tag = command::Tag::GET;
+const command::Tag SetCommand::_tag = command::Tag::SET;
 
 SetCommand::SetCommand(command::deserialize, const char* buffer, command::Size size)
 {
   ReadBuffer reader(buffer, size);
 
-  CommandType actualTag;
+  command::Tag actualTag;
 
   check(reader.read(actualTag));
   check(actualTag == _tag);
@@ -56,7 +56,7 @@ void SetCommand::serialize(iovec* output, command::Size& size) const
   output[0].iov_base = &size;
   output[0].iov_len = sizeof(size);
 
-  output[1].iov_base = const_cast<CommandType*>(&_tag);
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
   output[1].iov_len = sizeof(_tag);
 
   output[2].iov_base = const_cast<char*>(_key.data());
@@ -72,7 +72,7 @@ void SetCommand::serialize(iovec* output, command::Size& size) const
 GetCommand::GetCommand(command::deserialize, const char* buffer, command::Size size)
 {
   ReadBuffer reader(buffer, size);
-  CommandType actualTag;
+  command::Tag actualTag;
 
   check(reader.read(actualTag));
   check(actualTag == _tag);
@@ -103,7 +103,7 @@ void GetCommand::serialize(iovec* output, command::Size& size) const
   output[0].iov_base = &size;
   output[0].iov_len = sizeof(size);
 
-  output[1].iov_base = const_cast<CommandType*>(&_tag);
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
   output[1].iov_len = sizeof(_tag);
 
   output[2].iov_base = const_cast<char*>(_key.data());
