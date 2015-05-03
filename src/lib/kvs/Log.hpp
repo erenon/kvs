@@ -13,6 +13,8 @@ namespace kvs {
 
 typedef boost::log::dump_manip LogArray;
 
+void openLogfile(const char* logfile);
+
 } // namespace kvs
 
 #endif // KVS_LOG_HPP_

@@ -13,6 +13,8 @@ int main(int argc, const char* argv[])
   (void)argc;
   (void)argv;
 
+  openLogfile("/tmp/kvs_server.log");
+
   Store store("/tmp/kvs_store.db");
 
   Reactor reactor;
