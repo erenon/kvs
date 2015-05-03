@@ -21,7 +21,7 @@ bool CommandHandler::dispatch()
 
   if (rsize < 0)
   {
-    close(*_socket);
+    _socket.close();
     return false;
   }
 
@@ -78,7 +78,7 @@ bool CommandHandler::dispatch()
     catch (const std::runtime_error& ex)
     {
       KVS_LOG_ERROR << "Failed to deserialize command";
-      close(*_socket);
+      _socket.close();
       return false;
     }
 
