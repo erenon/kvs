@@ -10,7 +10,7 @@ CommandHandler::CommandHandler(int socket, Store& store, Reactor& reactor)
   :_socket(socket),
    _store(store),
    _buffer(1 << 20),
-   _writer(socket, reactor)
+   _writer(_socket, reactor)
 {}
 
 bool CommandHandler::dispatch()
@@ -68,7 +68,7 @@ bool CommandHandler::dispatch()
       default:
       {
         KVS_LOG_ERROR << "Invalid command tag received: " << static_cast<int>(comTag);
-        close(*_socket);
+        _socket.close();
         return false;
         break;
       }
@@ -90,7 +90,7 @@ bool CommandHandler::dispatch()
   return true;
 }
 
-CommandHandler::ResponseWriter::ResponseWriter(int socket, Reactor& reactor)
+CommandHandler::ResponseWriter::ResponseWriter(Fd& socket, Reactor& reactor)
   :_socket(socket),
    _reactor(reactor),
    _addedToReactor(false)
@@ -98,10 +98,10 @@ CommandHandler::ResponseWriter::ResponseWriter(int socket, Reactor& reactor)
 
 bool CommandHandler::ResponseWriter::dispatch()
 {
-  ssize_t wsize = ::write(_socket, _buffer.read(), _buffer.readAvailable());
+  ssize_t wsize = ::write(*_socket, _buffer.read(), _buffer.readAvailable());
   if (wsize < 0)
   {
-    close(_socket);
+    _socket.close();
     return false;
   }
 
@@ -121,11 +121,11 @@ void CommandHandler::ResponseWriter::write(iovec* output, std::size_t vecSize, s
   ssize_t wsize;
   if (_buffer.readAvailable())
   {
-    wsize = ::write(_socket, _buffer.read(), _buffer.readAvailable());
+    wsize = ::write(*_socket, _buffer.read(), _buffer.readAvailable());
     if (wsize < 0)
     {
       KVS_LOG_WARNING << "CommandHandler resp write: " << strerror(errno);
-      close(_socket);
+      _socket.close();
       return;
     }
 
@@ -140,11 +140,11 @@ void CommandHandler::ResponseWriter::write(iovec* output, std::size_t vecSize, s
   else
   {
     // write latest
-    wsize = writev(_socket, output, vecSize);
+    wsize = writev(*_socket, output, vecSize);
     if (wsize < 0)
     {
       KVS_LOG_WARNING << "CommandHandler resp write: " << strerror(errno);
-      close(_socket);
+      _socket.close();
       return;
     }
 
@@ -189,11 +189,11 @@ void CommandHandler::ResponseWriter::addToReactor()
 {
   if (_addedToReactor)
   {
-    _reactor.readdHandler(this, _socket, EPOLLOUT | EPOLLONESHOT);
+    _reactor.readdHandler(this, *_socket, EPOLLOUT | EPOLLONESHOT);
   }
   else
   {
-    _addedToReactor = _reactor.addHandler(this, _socket, EPOLLOUT | EPOLLONESHOT);
+    _addedToReactor = _reactor.addHandler(this, *_socket, EPOLLOUT | EPOLLONESHOT);
   }
 }
 

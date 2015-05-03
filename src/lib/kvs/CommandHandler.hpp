@@ -23,7 +23,7 @@ private:
   class ResponseWriter : public IOHandler
   {
   public:
-    ResponseWriter(int socket, Reactor& reactor);
+    ResponseWriter(Fd& socket, Reactor& reactor);
 
     bool dispatch() override;
 
@@ -33,7 +33,7 @@ private:
     void writeBuffer(iovec* output, std::size_t vecSize);
     void addToReactor();
 
-    int _socket;
+    Fd& _socket;
     Reactor& _reactor;
     WriteBuffer _buffer;
     bool _addedToReactor;
