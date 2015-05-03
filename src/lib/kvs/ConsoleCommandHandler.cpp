@@ -122,6 +122,8 @@ struct TextCommands : qi::symbols<char, command::Tag>
       ("set" , command::Tag::SET)
       ("add" , command::Tag::ADD)
       ("sum" , command::Tag::SUM)
+      ("max" , command::Tag::MAX)
+      ("min" , command::Tag::MIN)
     ;
   }
 
@@ -233,6 +235,30 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
       if (! readKey(buffer, end, key)) { return nullptr; }
 
       SumCommand command(key);
+      SetCommand result = command.execute(_store);
+
+      writeCommand(result, _out);
+
+      break;
+    }
+    case command::Tag::MAX:
+    {
+      std::string key;
+      if (! readKey(buffer, end, key)) { return nullptr; }
+
+      MaxCommand command(key);
+      SetCommand result = command.execute(_store);
+
+      writeCommand(result, _out);
+
+      break;
+    }
+    case command::Tag::MIN:
+    {
+      std::string key;
+      if (! readKey(buffer, end, key)) { return nullptr; }
+
+      MinCommand command(key);
       SetCommand result = command.execute(_store);
 
       writeCommand(result, _out);

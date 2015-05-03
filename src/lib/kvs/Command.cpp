@@ -12,6 +12,8 @@ const command::Tag GetCommand::_tag = command::Tag::GET;
 const command::Tag SetCommand::_tag = command::Tag::SET;
 const command::Tag AddCommand::_tag = command::Tag::ADD;
 const command::Tag SumCommand::_tag = command::Tag::SUM;
+const command::Tag MaxCommand::_tag = command::Tag::MAX;
+const command::Tag MinCommand::_tag = command::Tag::MIN;
 
 //
 // SET
@@ -329,6 +331,156 @@ SetCommand SumCommand::execute(const Store& store) const
 }
 
 void SumCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
+}
+
+//
+// MAX
+//
+
+struct GetMax : public boost::static_visitor<TypedValue>
+{
+  template <typename T>
+  TypedValue operator()(const T&) const
+  {
+    TypedValue result = NullValue{};
+    return result;
+  }
+
+  template <typename T>
+  TypedValue operator()(const std::vector<T>& items) const
+  {
+    T max = *std::max_element(items.begin(), items.end());
+    TypedValue result = max;
+    return result;
+  }
+};
+
+MaxCommand::MaxCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+SetCommand MaxCommand::execute(const Store& store) const
+{
+  auto finder = store.find(_key);
+  if (finder != store.end())
+  {
+    // *finder is the requested value
+    TypedValue maybeList = value::deserialize(finder->second.second.get(), finder->second.first);
+    TypedValue maxVal = boost::apply_visitor(GetMax{}, maybeList);
+
+    char buffer[64];
+    std::size_t serSize = value::serializedSize(maxVal);
+
+    if (serSize <= 64)
+    {
+      value::serialize(maxVal, buffer);
+      SetCommand result(_key, serSize, buffer);
+      return result;
+    }
+    else
+    {
+      KVS_LOG_ERROR << "Max result serialized size was too large: " << serSize;
+    }
+  }
+
+  // not found (or too large)
+  SetCommand result(_key, NullValue::serializedSize, NullValue::serializedValue());
+  return result;
+}
+
+void MaxCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
+}
+
+//
+// MIN
+//
+
+struct GetMin : public boost::static_visitor<TypedValue>
+{
+  template <typename T>
+  TypedValue operator()(const T&) const
+  {
+    TypedValue result = NullValue{};
+    return result;
+  }
+
+  template <typename T>
+  TypedValue operator()(const std::vector<T>& items) const
+  {
+    T min = *std::min_element(items.begin(), items.end());
+    TypedValue result = min;
+    return result;
+  }
+};
+
+MinCommand::MinCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+SetCommand MinCommand::execute(const Store& store) const
+{
+  auto finder = store.find(_key);
+  if (finder != store.end())
+  {
+    // *finder is the requested value
+    TypedValue maybeList = value::deserialize(finder->second.second.get(), finder->second.first);
+    TypedValue maxVal = boost::apply_visitor(GetMin{}, maybeList);
+
+    char buffer[64];
+    std::size_t serSize = value::serializedSize(maxVal);
+
+    if (serSize <= 64)
+    {
+      value::serialize(maxVal, buffer);
+      SetCommand result(_key, serSize, buffer);
+      return result;
+    }
+    else
+    {
+      KVS_LOG_ERROR << "Max result serialized size was too large: " << serSize;
+    }
+  }
+
+  // not found (or too large)
+  SetCommand result(_key, NullValue::serializedSize, NullValue::serializedValue());
+  return result;
+}
+
+void MinCommand::serialize(iovec* output, command::Size& size) const
 {
   size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
 

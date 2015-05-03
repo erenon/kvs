@@ -23,6 +23,8 @@ enum class Tag : uint16_t
   SET,
   ADD,
   SUM,
+  MAX,
+  MIN,
 };
 
 struct deserialize {};
@@ -116,6 +118,44 @@ public:
   SumCommand(const Key& key) : _key(key) {}
 
   SumCommand(command::deserialize, const char* buffer, command::Size size);
+
+  SetCommand execute(const Store& store) const;
+
+  static constexpr int serializedVectorSize = 3;
+
+  void serialize(iovec* output, command::Size& size) const;
+
+private:
+  static const command::Tag _tag;
+
+  Key _key;
+};
+
+class MaxCommand
+{
+public:
+  MaxCommand(const Key& key) : _key(key) {}
+
+  MaxCommand(command::deserialize, const char* buffer, command::Size size);
+
+  SetCommand execute(const Store& store) const;
+
+  static constexpr int serializedVectorSize = 3;
+
+  void serialize(iovec* output, command::Size& size) const;
+
+private:
+  static const command::Tag _tag;
+
+  Key _key;
+};
+
+class MinCommand
+{
+public:
+  MinCommand(const Key& key) : _key(key) {}
+
+  MinCommand(command::deserialize, const char* buffer, command::Size size);
 
   SetCommand execute(const Store& store) const;
 

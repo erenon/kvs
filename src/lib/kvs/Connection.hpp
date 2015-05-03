@@ -36,6 +36,12 @@ public:
   template <typename Field>
   bool sum(const Key& key, Field& result);
 
+  template <typename Field>
+  bool max(const Key& key, Field& result);
+
+  template <typename Field>
+  bool min(const Key& key, Field& result);
+
 private:
   template <typename Command>
   void sendCommand(const Command& command);
@@ -107,6 +113,42 @@ template <typename Field>
 bool Connection::sum(const Key& key, Field& result)
 {
   SumCommand req(key);
+  sendCommand(req);
+
+  SetCommand resp = recvCommand<SetCommand>();
+
+  auto value = resp.value();
+  TypedValue tvalue = value::deserialize(value.first, value.second);
+
+  Field* pResult = boost::get<Field>(&tvalue);
+  if (!pResult) { return false; }
+
+  result = *pResult;
+  return true;
+}
+
+template <typename Field>
+bool Connection::max(const Key& key, Field& result)
+{
+  MaxCommand req(key);
+  sendCommand(req);
+
+  SetCommand resp = recvCommand<SetCommand>();
+
+  auto value = resp.value();
+  TypedValue tvalue = value::deserialize(value.first, value.second);
+
+  Field* pResult = boost::get<Field>(&tvalue);
+  if (!pResult) { return false; }
+
+  result = *pResult;
+  return true;
+}
+
+template <typename Field>
+bool Connection::min(const Key& key, Field& result)
+{
+  MinCommand req(key);
   sendCommand(req);
 
   SetCommand resp = recvCommand<SetCommand>();

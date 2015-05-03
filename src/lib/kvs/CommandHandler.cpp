@@ -83,6 +83,30 @@ bool CommandHandler::dispatch()
 
         break;
       }
+      case command::Tag::MAX:
+      {
+        MaxCommand input(command::deserialize{}, comBegin, payloadSize);
+        SetCommand output = input.execute(_store);
+
+        iovec serialized[SetCommand::serializedVectorSize];
+        std::size_t fullSize;
+        output.serialize(serialized, fullSize);
+        _writer.write(serialized, SetCommand::serializedVectorSize, fullSize);
+
+        break;
+      }
+      case command::Tag::MIN:
+      {
+        MinCommand input(command::deserialize{}, comBegin, payloadSize);
+        SetCommand output = input.execute(_store);
+
+        iovec serialized[SetCommand::serializedVectorSize];
+        std::size_t fullSize;
+        output.serialize(serialized, fullSize);
+        _writer.write(serialized, SetCommand::serializedVectorSize, fullSize);
+
+        break;
+      }
       default:
       {
         KVS_LOG_ERROR << "Invalid command tag received: " << static_cast<int>(comTag);

@@ -168,3 +168,35 @@ BOOST_AUTO_TEST_CASE(SumCommandTest)
 
   BOOST_CHECK(true);
 }
+
+BOOST_AUTO_TEST_CASE(MinMaxCommandTest)
+{
+  Reactor reactor;
+  const int port = 1338;
+  boost::latch serverStarted(1);
+
+  std::thread serverThread(
+    server, std::ref(reactor), port, std::ref(serverStarted), nullptr
+  );
+
+  serverStarted.wait();
+
+  Connection connection("127.0.0.1", port);
+
+  connection.set("iarr", std::vector<int>{-1, -2, -3, 0, 12, 5, 7, -9, 11, 6, 6, -1});
+
+  int max = 0;
+  int min = 0;
+
+  BOOST_CHECK(connection.max("iarr", max));
+  BOOST_CHECK(connection.min("iarr", min));
+
+  BOOST_CHECK_EQUAL(12, max);
+  BOOST_CHECK_EQUAL(-9, min);
+
+  reactor.stop();
+
+  serverThread.join();
+
+  BOOST_CHECK(true);
+}
