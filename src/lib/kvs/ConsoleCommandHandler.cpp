@@ -120,6 +120,7 @@ struct TextCommands : qi::symbols<char, command::Tag>
     add
       ("get" , command::Tag::GET)
       ("set" , command::Tag::SET)
+      ("add" , command::Tag::ADD)
     ;
   }
 
@@ -202,6 +203,25 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
       KVS_LOG_DEBUG << "Set value: " << LogArray(valueBuffer.get(), valueSize);
 
       SetCommand command(key, valueSize, valueBuffer.get());
+      command.execute(_store);
+
+      break;
+    }
+    case command::Tag::ADD:
+    {
+      std::string key;
+      if (! readKey(buffer, end, key)) { return nullptr; }
+
+      TypedValue value;
+      if (! readValue(buffer, end, value)) { return nullptr; }
+
+      const std::size_t valueSize = value::serializedSize(value);
+      std::unique_ptr<char[]> valueBuffer(new char[valueSize]);
+      value::serialize(value, valueBuffer.get());
+
+      KVS_LOG_DEBUG << "Add value: " << LogArray(valueBuffer.get(), valueSize);
+
+      AddCommand command(key, valueSize, valueBuffer.get());
       command.execute(_store);
 
       break;

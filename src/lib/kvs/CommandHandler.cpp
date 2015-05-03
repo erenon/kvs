@@ -65,6 +65,12 @@ bool CommandHandler::dispatch()
         input.execute(_store);
         break;
       }
+      case command::Tag::ADD:
+      {
+        AddCommand input(command::deserialize{}, comBegin, payloadSize);
+        input.execute(_store);
+        break;
+      }
       default:
       {
         KVS_LOG_ERROR << "Invalid command tag received: " << static_cast<int>(comTag);

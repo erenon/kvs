@@ -30,6 +30,9 @@ public:
 
   void unset(const Key& key);
 
+  template <typename Field>
+  void add(const Key& key, const Field& value);
+
 private:
   template <typename Command>
   void sendCommand(const Command& command);
@@ -42,8 +45,8 @@ private:
   std::size_t _recvBufferSize = 0;
   std::unique_ptr<char[]> _recvBuffer;
 
-  std::size_t _setBufferSize = 0;
-  std::unique_ptr<char[]> _setBuffer;
+  std::size_t _sendBufferSize = 0;
+  std::unique_ptr<char[]> _sendBuffer;
 };
 
 template <typename Field>
@@ -68,15 +71,32 @@ template <typename Field>
 void Connection::set(const Key& key, const Field& value)
 {
   auto serSize = value::serializedSize(value);
-  if (_setBufferSize < serSize)
+  if (_sendBufferSize < serSize)
   {
-    _setBufferSize = serSize;
-    _setBuffer.reset(new char[_setBufferSize]);
+    _sendBufferSize = serSize;
+    _sendBuffer.reset(new char[_sendBufferSize]);
   }
 
-  value::serialize(value, _setBuffer.get());
+  value::serialize(value, _sendBuffer.get());
 
-  SetCommand req(key, serSize, _setBuffer.get());
+  SetCommand req(key, serSize, _sendBuffer.get());
+  sendCommand(req);
+}
+
+
+template <typename Field>
+void Connection::add(const Key& key, const Field& value)
+{
+  auto serSize = value::serializedSize(value);
+  if (_sendBufferSize < serSize)
+  {
+    _sendBufferSize = serSize;
+    _sendBuffer.reset(new char[_sendBufferSize]);
+  }
+
+  value::serialize(value, _sendBuffer.get());
+
+  AddCommand req(key, serSize, _sendBuffer.get());
   sendCommand(req);
 }
 

@@ -110,3 +110,32 @@ BOOST_AUTO_TEST_CASE(PersistentStore)
     serverThread.join();
   }
 }
+
+BOOST_AUTO_TEST_CASE(AddCommandTest)
+{
+  Reactor reactor;
+  const int port = 1338;
+  boost::latch serverStarted(1);
+
+  std::thread serverThread(
+    server, std::ref(reactor), port, std::ref(serverStarted), nullptr
+  );
+
+  serverStarted.wait();
+
+  Connection connection("127.0.0.1", port);
+
+  connection.add("iarr", std::vector<int>{1,2,3});
+  connection.add("iarr", int(4));
+  connection.add("iarr", std::vector<int>{5,6,7});
+
+  std::vector<int> iarr;
+  BOOST_CHECK(connection.get("iarr", iarr));
+  BOOST_CHECK((iarr == std::vector<int>{1,2,3,4,5,6,7}));
+
+  reactor.stop();
+
+  serverThread.join();
+
+  BOOST_CHECK(true);
+}

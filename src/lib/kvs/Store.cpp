@@ -121,6 +121,12 @@ bool Store::executeCommand(ReadBuffer& reader)
       input.execute(*this);
       break;
     }
+    case command::Tag::ADD:
+    {
+      AddCommand input(command::deserialize{}, comBegin, payloadSize);
+      input.execute(*this);
+      break;
+    }
     default:
       KVS_LOG_WARNING << "Unknown command in persistent store: " << int(comTag);
       break;

@@ -166,6 +166,16 @@ TypedValue deserialize(const char* buffer, std::size_t bufferSize)
   return result;
 }
 
+ValueTag deserializeTag(const char* buffer, std::size_t bufferSize)
+{
+  ValueTag result = ValueTag::null;
+
+  ReadBuffer reader(buffer, bufferSize);
+  reader.read(result);
+
+  return result;
+}
+
 } // namespace value
 
 } // namespace kvs

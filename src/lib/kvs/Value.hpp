@@ -61,6 +61,8 @@ typedef boost::variant<
   float,
   double,
 
+  std::vector<NullValue>,
+
   std::vector<char>,
   std::vector<short>,
   std::vector<int>,
@@ -102,7 +104,10 @@ struct ValueDescriptor<NullValue>
 template <typename T>
 struct ValueDescriptor<std::vector<T>>
 {
-  static_assert(std::is_arithmetic<T>::value, "Unsupported list type");
+  static_assert(
+    std::is_arithmetic<T>::value || std::is_same<T, NullValue>::value,
+    "Unsupported list type"
+  );
 
   static constexpr ValueTag tag =
     static_cast<ValueTag>(ValueDescriptor<T>::tag | ValueTag::list);
@@ -183,6 +188,8 @@ std::size_t serializedSize(const TypedValue& value);
 void serialize(const TypedValue& value, char* buffer);
 
 TypedValue deserialize(const char* buffer, std::size_t bufferSize);
+
+ValueTag deserializeTag(const char* buffer, std::size_t bufferSize);
 
 } // namespace value
 
