@@ -1,10 +1,13 @@
 #include <cstring> // memcpy
+#include <map>
 
 #include <kvs/Command.hpp>
 #include <kvs/Store.hpp>
 #include <kvs/Value.hpp>
 #include <kvs/Buffer.hpp>
 #include <kvs/Error.hpp>
+
+#include <dlfcn.h>
 
 namespace kvs {
 
@@ -15,6 +18,8 @@ const command::Tag PopCommand::_tag = command::Tag::POP;
 const command::Tag SumCommand::_tag = command::Tag::SUM;
 const command::Tag MaxCommand::_tag = command::Tag::MAX;
 const command::Tag MinCommand::_tag = command::Tag::MIN;
+const command::Tag SourceCommand::_tag = command::Tag::SOURCE;
+const command::Tag ExecuteCommand::_tag = command::Tag::EXECUTE;
 
 //
 // SET
@@ -555,6 +560,114 @@ SetCommand MinCommand::execute(const Store& store) const
 }
 
 void MinCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
+}
+
+//
+// SOURCE
+//
+
+std::map<std::string, void(*)(Store&)> g_storedProcedures;
+
+SourceCommand::SourceCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+void SourceCommand::execute()
+{
+  void* lib = dlopen(_key.data(), RTLD_LAZY);
+
+  if (!lib)
+  {
+    KVS_LOG_WARNING << "Failed to load library: '" << _key << "', error: "
+      << dlerror();
+    return;
+  }
+
+  void* procedure = dlsym(lib, "kvs_procedure");
+
+  if (!procedure)
+  {
+    KVS_LOG_WARNING << "No kvs_procedure found in library: '" << _key << "', error: "
+      << dlerror();
+    return;
+  }
+
+  Key name = _key;
+
+  { // beautify name
+    auto slash = name.find_last_of('/');
+    if (slash != Key::npos) { name.remove_prefix(slash); }
+    if (name.starts_with("/lib")) { name.remove_prefix(4); }
+    if (name.ends_with(".so")) { name.remove_suffix(3); }
+  }
+
+  g_storedProcedures.emplace(name.to_string(), reinterpret_cast<void(*)(Store&)>(procedure));
+
+  KVS_LOG_INFO << "Procedure loaded: " << name;
+}
+
+void SourceCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
+}
+
+//
+// EXECUTE
+//
+
+ExecuteCommand::ExecuteCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+void ExecuteCommand::execute(Store& store)
+{
+  auto finder = g_storedProcedures.find(std::string(_key));
+  if (finder == g_storedProcedures.end())
+  {
+    KVS_LOG_WARNING << "Procedure not found: '" << _key << "'";
+    return;
+  }
+
+  finder->second(store);
+
+  KVS_LOG_INFO << "Procedure executed: " << _key;
+
+  // TODO snapshot store
+}
+
+void ExecuteCommand::serialize(iovec* output, command::Size& size) const
 {
   size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
 

@@ -44,6 +44,10 @@ public:
   template <typename Field>
   bool min(const Key& key, Field& result);
 
+  void source(const Key& key);
+
+  void execute(const Key& key);
+
 private:
   template <typename Command>
   void sendCommand(const Command& command);

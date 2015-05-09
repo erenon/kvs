@@ -150,4 +150,12 @@ bool Store::executeCommand(ReadBuffer& reader)
   return true;
 }
 
+void Store::foreach(std::function<void(const std::string&, Container::mapped_type&)> func)
+{
+  for (auto&& pair : _store)
+  {
+    func(pair.first, pair.second);
+  }
+}
+
 } // namespace kvs

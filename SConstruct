@@ -20,7 +20,7 @@ env = Environment(
     #'-Wno-unused-local-typedefs', # boost spirit
     '-Wno-unused-parameter'       # boost parameter
   ],
-  LIBS=['pthread', 'boost_log', 'boost_program_options']
+  LIBS=['pthread', 'boost_log', 'boost_program_options', 'dl']
 )
 
 if 'CXX' in os.environ:

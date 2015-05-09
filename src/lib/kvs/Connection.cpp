@@ -41,4 +41,16 @@ void Connection::pop(const Key& key)
   sendCommand(req);
 }
 
+void Connection::source(const Key& key)
+{
+  SourceCommand req(key);
+  sendCommand(req);
+}
+
+void Connection::execute(const Key& key)
+{
+  ExecuteCommand req(key);
+  sendCommand(req);
+}
+
 } // namespace kvs

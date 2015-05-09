@@ -10,7 +10,7 @@ env.SharedLibrary('lib/KVS', Glob('src/lib/kvs/*.cpp'))
 # KVS Server
 #
 
-serverLibs = env['LIBS'] + ['KVS']
+serverLibs = env['LIBS'] + ['KVS', 'boost_system']
 
 env.Program('bin/kvsServer', Glob('src/bin/server/*.cpp'), LIBS = serverLibs)
 
@@ -34,3 +34,5 @@ for test in testPrograms:
     CPPDEFINES = testDefines,
     LIBS = testLibs,
   )
+
+env.SharedLibrary('test/BackupProcedure', 'src/test/BackupProcedure.cpp', LIBS = testLibs)

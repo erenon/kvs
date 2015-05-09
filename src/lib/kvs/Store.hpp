@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <string>
 #include <memory>
+#include <functional>
 
 #include <sys/uio.h>
 
@@ -37,6 +38,8 @@ public:
   Container::mapped_type& operator[](const Key& key) { return (*this)[std::string(key)]; };
   Container::iterator find(const Key& key) { return find(std::string(key)); }
   Container::const_iterator find(const Key& key) const { return find(std::string(key)); }
+
+  void foreach(std::function<void(const std::string&, Container::mapped_type&)> func);
 
 private:
   bool executeCommand(ReadBuffer& buffer);
