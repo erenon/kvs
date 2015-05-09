@@ -121,9 +121,9 @@ bool Store::executeCommand(ReadBuffer& reader)
       input.execute(*this);
       break;
     }
-    case command::Tag::ADD:
+    case command::Tag::PUSH:
     {
-      AddCommand input(command::deserialize{}, comBegin, payloadSize);
+      PushCommand input(command::deserialize{}, comBegin, payloadSize);
       input.execute(*this);
       break;
     }

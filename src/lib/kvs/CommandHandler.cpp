@@ -65,9 +65,9 @@ bool CommandHandler::dispatch()
         input.execute(_store);
         break;
       }
-      case command::Tag::ADD:
+      case command::Tag::PUSH:
       {
-        AddCommand input(command::deserialize{}, comBegin, payloadSize);
+        PushCommand input(command::deserialize{}, comBegin, payloadSize);
         input.execute(_store);
         break;
       }

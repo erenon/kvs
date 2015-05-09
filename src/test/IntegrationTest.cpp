@@ -125,9 +125,9 @@ BOOST_AUTO_TEST_CASE(AddCommandTest)
 
   Connection connection("127.0.0.1", port);
 
-  connection.add("iarr", std::vector<int>{1,2,3});
-  connection.add("iarr", int(4));
-  connection.add("iarr", std::vector<int>{5,6,7});
+  connection.push("iarr", std::vector<int>{1,2,3});
+  connection.push("iarr", int(4));
+  connection.push("iarr", std::vector<int>{5,6,7});
 
   std::vector<int> iarr;
   BOOST_CHECK(connection.get("iarr", iarr));
@@ -154,9 +154,9 @@ BOOST_AUTO_TEST_CASE(SumCommandTest)
 
   Connection connection("127.0.0.1", port);
 
-  connection.add("iarr", std::vector<int>{1,2,3});
-  connection.add("iarr", int(4));
-  connection.add("iarr", std::vector<int>{5,6,7});
+  connection.push("iarr", std::vector<int>{1,2,3});
+  connection.push("iarr", int(4));
+  connection.push("iarr", std::vector<int>{5,6,7});
 
   int sum = 0;
   BOOST_CHECK(connection.sum("iarr", sum));

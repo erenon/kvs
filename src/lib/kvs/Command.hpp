@@ -21,7 +21,7 @@ enum class Tag : uint16_t
 {
   GET,
   SET,
-  ADD,
+  PUSH,
   SUM,
   MAX,
   MIN,
@@ -82,10 +82,10 @@ private:
   Key _key;
 };
 
-class AddCommand
+class PushCommand
 {
 public:
-  AddCommand(
+  PushCommand(
     const Key& key,
     std::size_t serializedValueSize,
     const char* serializedValue
@@ -95,7 +95,7 @@ public:
      _serializedValue(serializedValue)
   {}
 
-  AddCommand(command::deserialize, const char* buffer, command::Size size);
+  PushCommand(command::deserialize, const char* buffer, command::Size size);
 
   void execute(Store& store) const;
   std::pair<const char*, std::size_t> value() const;

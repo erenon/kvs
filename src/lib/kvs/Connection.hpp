@@ -31,7 +31,7 @@ public:
   void unset(const Key& key);
 
   template <typename Field>
-  void add(const Key& key, const Field& value);
+  void push(const Key& key, const Field& value);
 
   template <typename Field>
   bool sum(const Key& key, Field& result);
@@ -94,7 +94,7 @@ void Connection::set(const Key& key, const Field& value)
 
 
 template <typename Field>
-void Connection::add(const Key& key, const Field& value)
+void Connection::push(const Key& key, const Field& value)
 {
   auto serSize = value::serializedSize(value);
   if (_sendBufferSize < serSize)
@@ -105,7 +105,7 @@ void Connection::add(const Key& key, const Field& value)
 
   value::serialize(value, _sendBuffer.get());
 
-  AddCommand req(key, serSize, _sendBuffer.get());
+  PushCommand req(key, serSize, _sendBuffer.get());
   sendCommand(req);
 }
 

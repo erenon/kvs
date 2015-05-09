@@ -10,7 +10,7 @@ namespace kvs {
 
 const command::Tag GetCommand::_tag = command::Tag::GET;
 const command::Tag SetCommand::_tag = command::Tag::SET;
-const command::Tag AddCommand::_tag = command::Tag::ADD;
+const command::Tag PushCommand::_tag = command::Tag::PUSH;
 const command::Tag SumCommand::_tag = command::Tag::SUM;
 const command::Tag MaxCommand::_tag = command::Tag::MAX;
 const command::Tag MinCommand::_tag = command::Tag::MIN;
@@ -123,10 +123,10 @@ void GetCommand::serialize(iovec* output, command::Size& size) const
 }
 
 //
-// ADD
+// PUSH
 //
 
-AddCommand::AddCommand(command::deserialize, const char* buffer, command::Size size)
+PushCommand::PushCommand(command::deserialize, const char* buffer, command::Size size)
 {
   ReadBuffer reader(buffer, size);
 
@@ -182,7 +182,7 @@ struct PushBackIfSame : public boost::static_visitor<>
   void operator()(const T&, const U&) const {}
 };
 
-void AddCommand::execute(Store& store) const
+void PushCommand::execute(Store& store) const
 {
   // write persistent store
   {
@@ -240,12 +240,12 @@ void AddCommand::execute(Store& store) const
   entry.first = newSize;
 }
 
-std::pair<const char*, std::size_t> AddCommand::value() const
+std::pair<const char*, std::size_t> PushCommand::value() const
 {
   return {_serializedValue, _serializedValueSize};
 }
 
-void AddCommand::serialize(iovec* output, command::Size& size) const
+void PushCommand::serialize(iovec* output, command::Size& size) const
 {
   size = sizeof(size) + sizeof(_tag) + _key.size() + 1 + sizeof(_serializedValueSize) + _serializedValueSize;
 

@@ -120,7 +120,7 @@ struct TextCommands : qi::symbols<char, command::Tag>
     add
       ("get" , command::Tag::GET)
       ("set" , command::Tag::SET)
-      ("add" , command::Tag::ADD)
+      ("push" , command::Tag::PUSH)
       ("sum" , command::Tag::SUM)
       ("max" , command::Tag::MAX)
       ("min" , command::Tag::MIN)
@@ -210,7 +210,7 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
 
       break;
     }
-    case command::Tag::ADD:
+    case command::Tag::PUSH:
     {
       std::string key;
       if (! readKey(buffer, end, key)) { return nullptr; }
@@ -224,7 +224,7 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
 
       KVS_LOG_DEBUG << "Add value: " << LogArray(valueBuffer.get(), valueSize);
 
-      AddCommand command(key, valueSize, valueBuffer.get());
+      PushCommand command(key, valueSize, valueBuffer.get());
       command.execute(_store);
 
       break;
