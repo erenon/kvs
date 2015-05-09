@@ -71,6 +71,12 @@ bool CommandHandler::dispatch()
         input.execute(_store);
         break;
       }
+      case command::Tag::POP:
+      {
+        PopCommand input(command::deserialize{}, comBegin, payloadSize);
+        input.execute(_store);
+        break;
+      }
       case command::Tag::SUM:
       {
         SumCommand input(command::deserialize{}, comBegin, payloadSize);

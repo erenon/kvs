@@ -121,6 +121,7 @@ struct TextCommands : qi::symbols<char, command::Tag>
       ("get" , command::Tag::GET)
       ("set" , command::Tag::SET)
       ("push" , command::Tag::PUSH)
+      ("pop" , command::Tag::POP)
       ("sum" , command::Tag::SUM)
       ("max" , command::Tag::MAX)
       ("min" , command::Tag::MIN)
@@ -222,9 +223,19 @@ const char* ConsoleCommandHandler::processCommand(const char* buffer, const char
       std::unique_ptr<char[]> valueBuffer(new char[valueSize]);
       value::serialize(value, valueBuffer.get());
 
-      KVS_LOG_DEBUG << "Add value: " << LogArray(valueBuffer.get(), valueSize);
+      KVS_LOG_DEBUG << "Push value: " << LogArray(valueBuffer.get(), valueSize);
 
       PushCommand command(key, valueSize, valueBuffer.get());
+      command.execute(_store);
+
+      break;
+    }
+    case command::Tag::POP:
+    {
+      std::string key;
+      if (! readKey(buffer, end, key)) { return nullptr; }
+
+      PopCommand command(key);
       command.execute(_store);
 
       break;

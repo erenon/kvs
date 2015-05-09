@@ -22,6 +22,7 @@ enum class Tag : uint16_t
   GET,
   SET,
   PUSH,
+  POP,
   SUM,
   MAX,
   MIN,
@@ -110,6 +111,25 @@ private:
   Key _key;
   std::size_t _serializedValueSize;
   const char* _serializedValue;
+};
+
+class PopCommand
+{
+public:
+  PopCommand(const Key& key) : _key(key) {}
+
+  PopCommand(command::deserialize, const char* buffer, command::Size size);
+
+  void execute(Store& store) const;
+
+  static constexpr int serializedVectorSize = 3;
+
+  void serialize(iovec* output, command::Size& size) const;
+
+private:
+  static const command::Tag _tag;
+
+  Key _key;
 };
 
 class SumCommand

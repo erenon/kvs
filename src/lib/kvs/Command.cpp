@@ -11,6 +11,7 @@ namespace kvs {
 const command::Tag GetCommand::_tag = command::Tag::GET;
 const command::Tag SetCommand::_tag = command::Tag::SET;
 const command::Tag PushCommand::_tag = command::Tag::PUSH;
+const command::Tag PopCommand::_tag = command::Tag::POP;
 const command::Tag SumCommand::_tag = command::Tag::SUM;
 const command::Tag MaxCommand::_tag = command::Tag::MAX;
 const command::Tag MinCommand::_tag = command::Tag::MIN;
@@ -263,6 +264,79 @@ void PushCommand::serialize(iovec* output, command::Size& size) const
 
   output[4].iov_base = const_cast<char*>(_serializedValue);
   output[4].iov_len = _serializedValueSize;
+}
+
+//
+// POP
+//
+
+struct PopBack : public boost::static_visitor<>
+{
+  template <typename T>
+  void operator()(std::vector<T>& list) const
+  {
+    list.pop_back();
+  }
+
+  template <typename T>
+  void operator()(const T&) const {}
+};
+
+PopCommand::PopCommand(command::deserialize, const char* buffer, command::Size size)
+{
+  ReadBuffer reader(buffer, size);
+  command::Tag actualTag;
+
+  check(reader.read(actualTag));
+  check(actualTag == _tag);
+  check(reader.read(_key));
+}
+
+void PopCommand::execute(Store& store) const
+{
+  // write persistent store
+  {
+    iovec serialized[serializedVectorSize];
+    std::size_t fullSize;
+    serialize(serialized, fullSize);
+    store.writePersStore(serialized, serializedVectorSize, fullSize);
+  }
+
+  // get field
+  auto&& entry = store[_key];
+
+  // if has content
+  if (entry.first > 0)
+  {
+    // deserialize
+    TypedValue list = value::deserialize(entry.second.get(), entry.first);
+    // add item
+    boost::apply_visitor(PopBack{}, list);
+
+    // set content
+    std::size_t newSize = value::serializedSize(list);
+    if (entry.first < newSize)
+    {
+      entry.second.reset(new char[newSize]);
+    }
+    value::serialize(list, entry.second.get());
+    entry.first = newSize;
+  }
+  // else no content, nop
+}
+
+void PopCommand::serialize(iovec* output, command::Size& size) const
+{
+  size = sizeof(size) + sizeof(_tag) + _key.size() + 1;
+
+  output[0].iov_base = &size;
+  output[0].iov_len = sizeof(size);
+
+  output[1].iov_base = const_cast<command::Tag*>(&_tag);
+  output[1].iov_len = sizeof(_tag);
+
+  output[2].iov_base = const_cast<char*>(_key.data());
+  output[2].iov_len = _key.size() + 1;
 }
 
 //

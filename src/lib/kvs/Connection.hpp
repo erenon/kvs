@@ -33,6 +33,8 @@ public:
   template <typename Field>
   void push(const Key& key, const Field& value);
 
+  void pop(const Key& key);
+
   template <typename Field>
   bool sum(const Key& key, Field& result);
 

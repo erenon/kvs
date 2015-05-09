@@ -35,4 +35,10 @@ Connection::Connection(const char* serverIp, int serverPort)
   }
 }
 
+void Connection::pop(const Key& key)
+{
+  PopCommand req(key);
+  sendCommand(req);
+}
+
 } // namespace kvs

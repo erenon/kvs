@@ -72,6 +72,8 @@ BOOST_AUTO_TEST_CASE(PersistentStore)
     connection.set<int>("foo", 123);
     connection.set<float>("bar", 456);
     connection.set<std::vector<int>>("baz", std::vector<int>{1, 2, 3});
+    connection.push("baz", std::vector<int>{4, 5});
+    connection.pop("baz");
 
     int foo = 0;
     BOOST_CHECK(connection.get("foo", foo));
@@ -103,7 +105,7 @@ BOOST_AUTO_TEST_CASE(PersistentStore)
 
     BOOST_CHECK_EQUAL(foo, 123);
     BOOST_CHECK_EQUAL(bar, 456);
-    BOOST_CHECK((baz == std::vector<int>{1, 2, 3}));
+    BOOST_CHECK((baz == std::vector<int>{1, 2, 3, 4}));
 
     reactor.stop();
 
@@ -111,7 +113,7 @@ BOOST_AUTO_TEST_CASE(PersistentStore)
   }
 }
 
-BOOST_AUTO_TEST_CASE(AddCommandTest)
+BOOST_AUTO_TEST_CASE(PushCommandTest)
 {
   Reactor reactor;
   const int port = 1338;
@@ -132,6 +134,36 @@ BOOST_AUTO_TEST_CASE(AddCommandTest)
   std::vector<int> iarr;
   BOOST_CHECK(connection.get("iarr", iarr));
   BOOST_CHECK((iarr == std::vector<int>{1,2,3,4,5,6,7}));
+
+  reactor.stop();
+
+  serverThread.join();
+
+  BOOST_CHECK(true);
+}
+
+BOOST_AUTO_TEST_CASE(PopCommandTest)
+{
+  Reactor reactor;
+  const int port = 1338;
+  boost::latch serverStarted(1);
+
+  std::thread serverThread(
+    server, std::ref(reactor), port, std::ref(serverStarted), nullptr
+  );
+
+  serverStarted.wait();
+
+  Connection connection("127.0.0.1", port);
+
+  connection.push("iarr", std::vector<int>{1,2,3});
+  connection.push("iarr", int(4));
+  connection.push("iarr", std::vector<int>{5,6,7});
+  connection.pop("iarr");
+
+  std::vector<int> iarr;
+  BOOST_CHECK(connection.get("iarr", iarr));
+  BOOST_CHECK((iarr == std::vector<int>{1,2,3,4,5,6}));
 
   reactor.stop();
 
