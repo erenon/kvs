@@ -28,8 +28,6 @@ public:
   template <typename Field>
   void set(const Key& key, const Field& value);
 
-  void unset(const Key& key);
-
   template <typename Field>
   void push(const Key& key, const Field& value);
 
@@ -44,9 +42,9 @@ public:
   template <typename Field>
   bool min(const Key& key, Field& result);
 
-  void source(const Key& key);
+  void source(const Key& library);
 
-  void execute(const Key& key);
+  void execute(const Key& procedure);
 
 private:
   template <typename Command>
