@@ -15,7 +15,7 @@ int main(int argc, const char* argv[])
 
   openLogfile("/tmp/kvs_server.log");
 
-  Store store("/tmp/kvs_store.db");
+  Store store("/var/tmp/kvs_store.db");
 
   Reactor reactor;
 
