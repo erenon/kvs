@@ -77,7 +77,7 @@ typedef boost::variant<
 
 bool readValue(const char*& begin, const char* end, TypedValue& result);
 
-typedef std::size_t ListSize;
+typedef uint64_t ListSize;
 
 template <typename>
 struct ValueDescriptor;
